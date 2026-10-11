@@ -1,0 +1,155 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- The shared SG Tools look. Every SG Tools window uses these
+         colours and styles, so changing a value here changes all of them. -->
+
+    <!-- Colours -->
+    <SolidColorBrush x:Key="SG.Accent" Color="#0F766E"/>
+    <SolidColorBrush x:Key="SG.AccentHover" Color="#0B5F58"/>
+    <SolidColorBrush x:Key="SG.OnAccent" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SG.Ink" Color="#1F2328"/>
+    <SolidColorBrush x:Key="SG.Muted" Color="#667085"/>
+    <SolidColorBrush x:Key="SG.Line" Color="#D5D9DE"/>
+    <SolidColorBrush x:Key="SG.Surface" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SG.Hover" Color="#F1F3F5"/>
+    <SolidColorBrush x:Key="SG.NoticeBack" Color="#E3F4F1"/>
+    <SolidColorBrush x:Key="SG.NoticeInk" Color="#0B4F49"/>
+    <SolidColorBrush x:Key="SG.ProblemBack" Color="#FCEBEA"/>
+    <SolidColorBrush x:Key="SG.ProblemInk" Color="#8A1C1C"/>
+
+    <!-- Font -->
+    <FontFamily x:Key="SG.Font">Segoe UI Variable Text, Segoe UI</FontFamily>
+
+    <!-- The white rounded card every window sits in -->
+    <Style x:Key="SG.WindowFrame" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource SG.Surface}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SG.Line}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="24" ShadowDepth="6" Direction="270"
+                                  Color="#000000" Opacity="0.18"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Small grey label above a field -->
+    <Style x:Key="SG.Label" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource SG.Muted}"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+
+    <!-- Text field: the border turns teal while you type in it -->
+    <Style x:Key="SG.TextBox" TargetType="TextBox">
+        <Setter Property="Foreground" Value="{StaticResource SG.Ink}"/>
+        <Setter Property="CaretBrush" Value="{StaticResource SG.Ink}"/>
+        <Setter Property="SelectionBrush" Value="{StaticResource SG.Accent}"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="frame" CornerRadius="6"
+                            Background="{StaticResource SG.Surface}"
+                            BorderBrush="{StaticResource SG.Line}"
+                            BorderThickness="1.5">
+                        <ScrollViewer x:Name="PART_ContentHost"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
+                        </Trigger>
+                        <!-- A field that can't be used is greyed out -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="frame" Property="Background" Value="{StaticResource SG.Hover}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Ordinary button, such as Cancel -->
+    <Style x:Key="SG.Button" TargetType="Button">
+        <Setter Property="Foreground" Value="{StaticResource SG.Ink}"/>
+        <Setter Property="Background" Value="{StaticResource SG.Surface}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SG.Line}"/>
+        <Setter Property="MinWidth" Value="84"/>
+        <Setter Property="Padding" Value="14,6"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="frame" CornerRadius="6"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1.5"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="frame" Property="Background" Value="{StaticResource SG.Hover}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- The one main button of a window, such as Apply -->
+    <Style x:Key="SG.PrimaryButton" TargetType="Button" BasedOn="{StaticResource SG.Button}">
+        <Setter Property="Foreground" Value="{StaticResource SG.OnAccent}"/>
+        <Setter Property="Background" Value="{StaticResource SG.Accent}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="frame" CornerRadius="6"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1.5"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="frame" Property="Background" Value="{StaticResource SG.AccentHover}"/>
+                            <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource SG.AccentHover}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource SG.Ink}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- The small X in a window's title bar -->
+    <Style x:Key="SG.CloseButton" TargetType="Button">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="frame" CornerRadius="6" Background="Transparent">
+                        <Path Data="M0,0 L8,8 M8,0 L0,8" Stroke="{StaticResource SG.Muted}"
+                              StrokeThickness="1.4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="frame" Property="Background" Value="{StaticResource SG.Hover}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
