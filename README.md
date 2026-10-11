@@ -14,7 +14,9 @@ Each tool here is rebuilt in C# in [sg-csharp-tools](https://github.com/sonusgeo
 
 **What the tool does.** Pick a view on the sheet and type its new number. If another view already has that number, the two swap, and the tool handles the temporary number itself. The same box also changes the view's Title on Sheet.
 
-<img src="docs/view-number-title.png" alt="The View Number + Title box, showing a notice that number 3 is used by East and the two views will swap" width="400">
+![Picking two views on a sheet, swapping their numbers and changing their titles](docs/view-number-title/demo.gif)
+
+<img src="docs/view-number-title/box.png" alt="The View Number + Title box, showing a notice that number 3 is used by East and the two views will swap" width="400">
 
 **How to use it**
 
@@ -32,7 +34,7 @@ Each change is one undo step, so Ctrl+Z takes back one view at a time.
 - Leaving Title on Sheet empty shows the view's own name on the sheet.
 - Revit treats `1` and `01`, and `a1` and `A1`, as different numbers, so the tool does too.
 
-**Tested in:** Revit 2027. Written to be compatible with Revit 2024, 2025 and 2026, but not yet run in them.
+**Tested in:** Revit 2027, in full. Also run in Revit 2024, where it works, though without the full round of tests. Written to be compatible with Revit 2025 and 2026, but not yet run in them.
 
 **What building it taught**
 
