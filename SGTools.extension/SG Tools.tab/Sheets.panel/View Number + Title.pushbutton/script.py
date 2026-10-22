@@ -18,6 +18,16 @@ class ViewportFilter(ISelectionFilter):
     def AllowReference(self, reference, point):
         return False
 
+# Revit refuses two views with the same number on one sheet, even for a
+# moment, so a swap parks one view on this number in between.
+TEMP_NUMBER = "SG_TEMP_SWAP"
+
+def set_number(viewport, number):
+    """Set a view's Detail Number. If Revit refuses, raise an error, so the
+    transaction undoes everything done so far."""
+    if not viewport.get_Parameter(DETAIL_NUMBER).Set(number):
+        raise Exception("Revit refused the number '{}'.".format(number))
+
 # 1. Check that the open view is a sheet. If it isn't, say so and stop.
 if not isinstance(revit.active_view, DB.ViewSheet):
     forms.alert("Open a sheet first, then run this tool.", exitscript=True)
@@ -39,7 +49,7 @@ while True:
     old_number = number_param.AsString() or ""
     old_title = title_param.AsString() or ""
 
-     # 4. Ask for the new number. A view with no number (a legend) skips this.
+    # 4. Ask for the new number. A view with no number (a legend) skips this.
     new_number = old_number
     if old_number:
         answer = forms.ask_for_string(
@@ -48,7 +58,10 @@ while True:
             title="View Number + Title")
         if answer is None:
             continue
-        new_number = answer.strip()   
+        new_number = answer.strip()
+        if not new_number:
+            forms.alert("A view needs a number. Nothing was changed.")
+            continue
 
     # 5. Ask for the new title. Empty means the sheet shows the view name.
     answer = forms.ask_for_string(
@@ -62,10 +75,31 @@ while True:
     # 6. If nothing changed, go back to step 2.
     if new_number == old_number and new_title == old_title:
         continue
+    
+    # 7. Note which number each of the other views on this sheet has.
+    #    Views without a number (legends) are left out.
+    sheet = doc.GetElement(viewport.SheetId)
+    others = {}
+    for other_id in sheet.GetAllViewports():
+        other = doc.GetElement(other_id)
+        number = other.get_Parameter(DETAIL_NUMBER).AsString() or ""
+        if other.Id != viewport.Id and number:
+            others[number] = other
 
-    # Make the changes as one undo step. Round 2 adds the swap here.
-    with revit.Transaction("View Number + Title"):
-        if new_number != old_number:
-            number_param.Set(new_number)
-        if new_title != old_title:
-            title_param.Set(new_title)
+    # 8. Make the changes as one undo step. If Revit refuses any of them,
+    #    the transaction undoes them all and we say so.
+    try:
+        with revit.Transaction("View Number + Title", log_errors=False):
+            if new_number != old_number:
+                other = others.get(new_number)
+                if other is None:
+                    set_number(viewport, new_number)
+                else:
+                    set_number(other, TEMP_NUMBER)
+                    set_number(viewport, new_number)
+                    set_number(other, old_number)
+            if new_title != old_title:
+                title_param.Set(new_title)
+    except Exception as error:
+        forms.alert("Revit refused the change, so nothing was changed.\n\n"
+                    + str(error))
