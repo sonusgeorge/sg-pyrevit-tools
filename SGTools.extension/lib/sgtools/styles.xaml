@@ -1,0 +1,102 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- The shared SG Tools look. Every SG Tools window uses these
+         colours and styles, so changing a value here changes all of them. -->
+
+    <!-- Colours -->
+    <SolidColorBrush x:Key="SG.Accent" Color="#0F766E"/>
+    <SolidColorBrush x:Key="SG.OnAccent" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SG.Ink" Color="#1F2328"/>
+    <SolidColorBrush x:Key="SG.Muted" Color="#667085"/>
+    <SolidColorBrush x:Key="SG.Line" Color="#D5D9DE"/>
+    <SolidColorBrush x:Key="SG.Surface" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SG.AccentHover" Color="#0B5F58"/>
+    <SolidColorBrush x:Key="SG.Hover" Color="#F1F3F5"/>
+
+    <!-- Font -->
+    <FontFamily x:Key="SG.Font">Segoe UI Variable Text, Segoe UI</FontFamily>
+
+    <!-- Small grey label above a field -->
+    <Style x:Key="SG.Label" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource SG.Muted}"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="Margin" Value="0,12,0,4"/>
+    </Style>
+
+    <!-- Text field: the border turns teal while you type in it -->
+    <Style x:Key="SG.TextBox" TargetType="TextBox">
+        <Setter Property="Foreground" Value="{StaticResource SG.Ink}"/>
+        <Setter Property="Background" Value="{StaticResource SG.Surface}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SG.Line}"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border CornerRadius="6"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1.5">
+                        <ScrollViewer x:Name="PART_ContentHost"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <!-- Typing in it: teal border -->
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
+            </Trigger>
+            <!-- Can't be used (a legend's number): grey -->
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="{StaticResource SG.Hover}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Ordinary button, such as Cancel -->
+    <Style x:Key="SG.Button" TargetType="Button">
+        <Setter Property="Foreground" Value="{StaticResource SG.Ink}"/>
+        <Setter Property="Background" Value="{StaticResource SG.Surface}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SG.Line}"/>
+        <Setter Property="MinWidth" Value="84"/>
+        <Setter Property="Padding" Value="14,6"/>
+        <!-- How a button is drawn: a rounded border with the label in it -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border CornerRadius="6"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1.5"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <!-- Hover: light grey -->
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource SG.Hover}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- The one main button of a window, such as Apply -->
+    <Style x:Key="SG.PrimaryButton" TargetType="Button"
+           BasedOn="{StaticResource SG.Button}">
+        <Setter Property="Foreground" Value="{StaticResource SG.OnAccent}"/>
+        <Setter Property="Background" Value="{StaticResource SG.Accent}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
+        <!-- Hover: darker teal -->
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource SG.AccentHover}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource SG.AccentHover}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+</ResourceDictionary>

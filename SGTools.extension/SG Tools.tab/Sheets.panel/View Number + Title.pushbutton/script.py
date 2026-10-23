@@ -1,6 +1,7 @@
 from pyrevit import revit, DB, forms
 from Autodesk.Revit.UI.Selection import ISelectionFilter, ObjectType
 from Autodesk.Revit.Exceptions import OperationCanceledException
+from sgtools import STYLES
 
 doc = revit.doc
 uidoc = revit.uidoc
@@ -28,9 +29,42 @@ def set_number(viewport, number):
     if not viewport.get_Parameter(DETAIL_NUMBER).Set(number):
         raise Exception("Revit refused the number '{}'.".format(number))
 
+class ViewTitleWindow(forms.WPFWindow):
+    """The box that asks for the new number and title.
+
+    After it closes, 'result' is (number, title), or None if cancelled."""
+
+    def __init__(self, view_name, old_number, old_title):
+        # Load the shared SG Tools look first, then this window's layout.
+        self.merge_resource_dict(STYLES)
+        forms.WPFWindow.__init__(self, "ViewTitleWindow.xaml")
+        self.result = None
+        # A view with no number (a legend) can only have its title changed.
+        self.has_number = bool(old_number)
+
+        # Fill the box with what the clicked view has now.
+        self.view_name_tb.Text = view_name
+        self.number_tb.Text = old_number
+        self.title_tb.Text = old_title
+        if not self.has_number:
+            self.number_tb.IsEnabled = False
+
+    def apply_clicked(self, sender, args):
+        number = self.number_tb.Text.strip()
+        if self.has_number and not number:
+            forms.alert("A view needs a number.")
+            return
+        self.result = (number, self.title_tb.Text.strip())
+        self.Close()
+
+    def cancel_clicked(self, sender, args):
+        self.Close()
+
 # 1. Check that the open view is a sheet. If it isn't, say so and stop.
 if not isinstance(revit.active_view, DB.ViewSheet):
     forms.alert("Open a sheet first, then run this tool.", exitscript=True)
+
+
 
 while True:
     # 2. Wait for a click on a view on the sheet. Esc stops the tool.
@@ -49,33 +83,19 @@ while True:
     old_number = number_param.AsString() or ""
     old_title = title_param.AsString() or ""
 
-    # 4. Ask for the new number. A view with no number (a legend) skips this.
-    new_number = old_number
-    if old_number:
-        answer = forms.ask_for_string(
-            default=old_number,
-            prompt="Detail number:",
-            title="View Number + Title")
-        if answer is None:
-            continue
-        new_number = answer.strip()
-        if not new_number:
-            forms.alert("A view needs a number. Nothing was changed.")
-            continue
-
-    # 5. Ask for the new title. Empty means the sheet shows the view name.
-    answer = forms.ask_for_string(
-        default=old_title,
-        prompt="Title on sheet (leave empty to show the view name):",
-        title="View Number + Title")
-    if answer is None:
+    # 4 and 5. Show the box with the current values and wait for Apply
+    #          or Cancel. Cancel goes back to step 2.
+    view = doc.GetElement(viewport.ViewId)
+    window = ViewTitleWindow(view.Name, old_number, old_title)
+    window.show_dialog()
+    if window.result is None:
         continue
-    new_title = answer.strip()
+    new_number, new_title = window.result
 
     # 6. If nothing changed, go back to step 2.
     if new_number == old_number and new_title == old_title:
         continue
-    
+
     # 7. Note which number each of the other views on this sheet has.
     #    Views without a number (legends) are left out.
     sheet = doc.GetElement(viewport.SheetId)
