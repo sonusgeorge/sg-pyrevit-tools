@@ -1,3 +1,30 @@
+# -*- coding: utf-8 -*-
+"""Renumber and retitle the views on a sheet.
+_____________________________________________________________________
+What it does:
+Changes a view's Detail Number and its Title on Sheet.
+If the number already belongs to another view on the sheet,
+the two views swap numbers, so you never juggle temporary numbers.
+_____________________________________________________________________
+How to use:
+1. Open a sheet and click this button.
+2. Click a view on the sheet.
+3. Type the new number, the new title, or both. Press Enter.
+4. Click the next view, or press Esc to finish.
+_____________________________________________________________________
+Good to know:
+- A notice warns you before two views swap.
+- Each change is one undo step (Ctrl+Z).
+- A legend has no number, so only its title can be changed.
+- Leave the title empty to show the view's own name.
+_____________________________________________________________________
+Version 1.0 (October 2026). Tested in Revit 2027.
+Press F1 for the full guide."""
+
+__title__ = "View Number\n+ Title"
+__author__ = "Sonu George"
+__helpurl__ = "https://github.com/sonusgeorge/sg-pyrevit-tools#view-number--title"
+
 import clr
 
 # Visibility (shown or collapsed) is part of WPF. IronPython can only
@@ -69,6 +96,13 @@ class ViewTitleWindow(forms.WPFWindow):
             self.show_notice("This view has no detail number. "
                              "You can still change its title.")
 
+    def window_loaded(self, sender, args):
+        # Start with the cursor in the number field and the number
+        # selected, so typing replaces it. A legend starts in the title.
+        field = self.number_tb if self.has_number else self.title_tb
+        field.Focus()
+        field.SelectAll()    
+
     def number_changed(self, sender, args):
         # Runs on every change to the text in the number field.
         if not self.has_number:
@@ -107,67 +141,76 @@ class ViewTitleWindow(forms.WPFWindow):
     def cancel_clicked(self, sender, args):
         self.Close()
 
+    def drag_window(self, sender, args):
+        # Lets you move the box by dragging its title bar.
+        self.DragMove()
+
 # 1. Check that the open view is a sheet. If it isn't, say so and stop.
 if not isinstance(revit.active_view, DB.ViewSheet):
-    forms.alert("Open a sheet first, then run this tool.", exitscript=True)
+    forms.alert(
+        "Open a sheet first, then run this tool.",
+        sub_msg="If you are working inside a view on a sheet, deactivate "
+                "it first (right-click, Deactivate View).",
+        exitscript=True)
 
 
+# 2 to 7 run while a banner at the top of Revit says what to do.
+with forms.WarningBar(title="Pick a view to renumber. Esc to finish."):
+    while True:
+        # 2. Wait for a click on a view on the sheet. Esc stops the tool.
+        try:
+            reference = uidoc.Selection.PickObject(
+                ObjectType.Element,
+                ViewportFilter(),
+                "Pick a view. Esc to finish.")
+        except OperationCanceledException:
+            break
+        viewport = doc.GetElement(reference)
 
-while True:
-    # 2. Wait for a click on a view on the sheet. Esc stops the tool.
-    try:
-        reference = uidoc.Selection.PickObject(
-            ObjectType.Element,
-            ViewportFilter(),
-            "Pick a view. Esc to finish.")
-    except OperationCanceledException:
-        break
-    viewport = doc.GetElement(reference)
+        # 3. Read the view's Detail Number and Title on Sheet.
+        number_param = viewport.get_Parameter(DETAIL_NUMBER)
+        title_param = viewport.get_Parameter(TITLE_ON_SHEET)
+        old_number = number_param.AsString() or ""
+        old_title = title_param.AsString() or ""
 
-    # 3. Read the view's Detail Number and Title on Sheet.
-    number_param = viewport.get_Parameter(DETAIL_NUMBER)
-    title_param = viewport.get_Parameter(TITLE_ON_SHEET)
-    old_number = number_param.AsString() or ""
-    old_title = title_param.AsString() or ""
+        # 4. Note which number each of the other views on this sheet has, so
+        #    the box can warn about a swap. Views without a number (legends)
+        #    are left out.
+        sheet = doc.GetElement(viewport.SheetId)
+        others = {}
+        for other_id in sheet.GetAllViewports():
+            other = doc.GetElement(other_id)
+            number = other.get_Parameter(DETAIL_NUMBER).AsString() or ""
+            if other.Id != viewport.Id and number:
+                others[number] = other
 
-    # 4. Note which number each of the other views on this sheet has, so
-    #    the box can warn about a swap. Views without a number (legends)
-    #    are left out.
-    sheet = doc.GetElement(viewport.SheetId)
-    others = {}
-    for other_id in sheet.GetAllViewports():
-        other = doc.GetElement(other_id)
-        number = other.get_Parameter(DETAIL_NUMBER).AsString() or ""
-        if other.Id != viewport.Id and number:
-            others[number] = other
+        # 5. Show the box with the current values and wait for Apply or
+        #    Cancel. Cancel goes back to step 2.
+        view = doc.GetElement(viewport.ViewId)
+        window = ViewTitleWindow(view.Name, old_number, old_title, others)
+        window.show_dialog()
+        if window.result is None:
+            continue
+        new_number, new_title = window.result
 
-    # 5. Show the box with the current values and wait for Apply or
-    #    Cancel. Cancel goes back to step 2.
-    view = doc.GetElement(viewport.ViewId)
-    window = ViewTitleWindow(view.Name, old_number, old_title, others)
-    window.show_dialog()
-    if window.result is None:
-        continue
-    new_number, new_title = window.result
+        # 6. If nothing changed, go back to step 2.
+        if new_number == old_number and new_title == old_title:
+            continue
 
-    # 6. If nothing changed, go back to step 2.
-    if new_number == old_number and new_title == old_title:
-        continue
-
-    # 7. Make the changes as one undo step. If Revit refuses any of them,
-    #    the transaction undoes them all and we say so.
-    try:
-        with revit.Transaction("View Number + Title", log_errors=False):
-            if new_number != old_number:
-                other = others.get(new_number)
-                if other is None:
-                    set_number(viewport, new_number)
-                else:
-                    set_number(other, TEMP_NUMBER)
-                    set_number(viewport, new_number)
-                    set_number(other, old_number)
-            if new_title != old_title:
-                title_param.Set(new_title)
-    except Exception as error:
-        forms.alert("Revit refused the change, so nothing was changed.\n\n"
-                    + str(error))
+        # 7. Make the changes as one undo step. If Revit refuses any of them,
+        #    the transaction undoes them all and we say so.
+        try:
+            with revit.Transaction("View Number + Title", log_errors=False):
+                if new_number != old_number:
+                    other = others.get(new_number)
+                    if other is None:
+                        set_number(viewport, new_number)
+                    else:
+                        set_number(other, TEMP_NUMBER)
+                        set_number(viewport, new_number)
+                        set_number(other, old_number)
+                if new_title != old_title:
+                    title_param.Set(new_title)
+        except Exception as error:
+            forms.alert("Revit refused the change, so nothing was changed.\n\n"
+                        + str(error))

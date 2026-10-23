@@ -1,41 +1,65 @@
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="View Number + Title"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize">
+        Loaded="window_loaded">
 
-    <StackPanel Margin="16" Width="300"
-                TextElement.FontFamily="{StaticResource SG.Font}"
-                TextElement.FontSize="13"
-                TextElement.Foreground="{StaticResource SG.Ink}">
+    <!-- The white card. The margin leaves room for its shadow. -->
+    <Border Style="{StaticResource SG.WindowFrame}" Margin="24" Width="360"
+            TextElement.FontFamily="{StaticResource SG.Font}"
+            TextElement.FontSize="13"
+            TextElement.Foreground="{StaticResource SG.Ink}">
+        <DockPanel>
 
-        <!-- Which view was clicked -->
-        <TextBlock x:Name="view_name_tb" FontSize="15" FontWeight="SemiBold"/>
+            <!-- Title bar: drag it to move the window -->
+            <Border DockPanel.Dock="Top" Background="Transparent" Padding="14,8,8,8"
+                    BorderBrush="{StaticResource SG.Line}" BorderThickness="0,0,0,1"
+                    MouseLeftButtonDown="drag_window">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource SG.CloseButton}"
+                            Click="cancel_clicked" ToolTip="Close"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="SG Tools" Margin="0,0,8,0" FontWeight="SemiBold"
+                                   Foreground="{StaticResource SG.Accent}"/>
+                        <TextBlock Text="View number + title" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
 
-        <!-- Detail number -->
-        <TextBox x:Name="number_tb" Style="{StaticResource SG.TextBox}"
-                 TextChanged="number_changed"/>
+            <!-- The fields, the same as before -->
+            <StackPanel Margin="16,14,16,18">
 
-        <!-- Notice under the number: hidden until there is something to say -->
-        <Border x:Name="notice" CornerRadius="6" Padding="10,8" Margin="0,8,0,0"
-                Visibility="Collapsed">
-            <TextBlock x:Name="notice_tb" TextWrapping="Wrap"/>
-        </Border>
+                <!-- Which view was clicked -->
+                <TextBlock x:Name="view_name_tb" FontSize="15" FontWeight="SemiBold"/>
 
-        <!-- Title on sheet -->
-        <TextBlock Text="Title on sheet (leave empty to show the view name)"
-                   TextWrapping="Wrap" Style="{StaticResource SG.Label}"/>
-        <TextBox x:Name="title_tb" Style="{StaticResource SG.TextBox}"/>
+                <!-- Detail number -->
+                <TextBlock Text="Detail number" Style="{StaticResource SG.Label}"/>
+                <TextBox x:Name="number_tb" Style="{StaticResource SG.TextBox}"
+                         TextChanged="number_changed"/>
 
-        <!-- Buttons: Enter presses Apply, Esc presses Cancel -->
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" Style="{StaticResource SG.Button}" Margin="0,0,8,0"
-                    IsCancel="True" Click="cancel_clicked"/>
-            <Button Content="Apply" Style="{StaticResource SG.PrimaryButton}"
-                    IsDefault="True" Click="apply_clicked"/>
-        </StackPanel>
+                <!-- Notice under the number: hidden until there is something to say -->
+                <Border x:Name="notice" CornerRadius="6" Padding="10,8" Margin="0,8,0,0"
+                        Visibility="Collapsed">
+                    <TextBlock x:Name="notice_tb" TextWrapping="Wrap"/>
+                </Border>
 
-    </StackPanel>
+                <!-- Title on sheet -->
+                <TextBlock Text="Title on sheet (leave empty to show the view name)"
+                           TextWrapping="Wrap" Style="{StaticResource SG.Label}"/>
+                <TextBox x:Name="title_tb" Style="{StaticResource SG.TextBox}"/>
 
+                <!-- Buttons: Enter presses Apply, Esc presses Cancel -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                    <Button Content="Cancel" Style="{StaticResource SG.Button}" Margin="0,0,8,0"
+                            IsCancel="True" Click="cancel_clicked"/>
+                    <Button Content="Apply" Style="{StaticResource SG.PrimaryButton}"
+                            IsDefault="True" Click="apply_clicked"/>
+                </StackPanel>
+
+            </StackPanel>
+        </DockPanel>
+    </Border>
 </Window>
