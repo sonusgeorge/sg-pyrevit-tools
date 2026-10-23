@@ -14,8 +14,14 @@
         <TextBlock x:Name="view_name_tb" FontSize="15" FontWeight="SemiBold"/>
 
         <!-- Detail number -->
-        <TextBlock Text="Detail number" Style="{StaticResource SG.Label}"/>
-        <TextBox x:Name="number_tb" Style="{StaticResource SG.TextBox}"/>
+        <TextBox x:Name="number_tb" Style="{StaticResource SG.TextBox}"
+                 TextChanged="number_changed"/>
+
+        <!-- Notice under the number: hidden until there is something to say -->
+        <Border x:Name="notice" CornerRadius="6" Padding="10,8" Margin="0,8,0,0"
+                Visibility="Collapsed">
+            <TextBlock x:Name="notice_tb" TextWrapping="Wrap"/>
+        </Border>
 
         <!-- Title on sheet -->
         <TextBlock Text="Title on sheet (leave empty to show the view name)"

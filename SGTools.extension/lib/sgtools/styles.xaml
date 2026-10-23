@@ -13,6 +13,10 @@
     <SolidColorBrush x:Key="SG.Surface" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="SG.AccentHover" Color="#0B5F58"/>
     <SolidColorBrush x:Key="SG.Hover" Color="#F1F3F5"/>
+    <SolidColorBrush x:Key="SG.NoticeBack" Color="#E3F4F1"/>
+    <SolidColorBrush x:Key="SG.NoticeInk" Color="#0B4F49"/>
+    <SolidColorBrush x:Key="SG.ProblemBack" Color="#FCEBEA"/>
+    <SolidColorBrush x:Key="SG.ProblemInk" Color="#8A1C1C"/>
 
     <!-- Font -->
     <FontFamily x:Key="SG.Font">Segoe UI Variable Text, Segoe UI</FontFamily>
