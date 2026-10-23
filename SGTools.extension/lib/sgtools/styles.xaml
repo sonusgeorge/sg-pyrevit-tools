@@ -6,12 +6,12 @@
 
     <!-- Colours -->
     <SolidColorBrush x:Key="SG.Accent" Color="#0F766E"/>
-    <SolidColorBrush x:Key="SG.AccentHover" Color="#0B5F58"/>
     <SolidColorBrush x:Key="SG.OnAccent" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="SG.Ink" Color="#1F2328"/>
     <SolidColorBrush x:Key="SG.Muted" Color="#667085"/>
     <SolidColorBrush x:Key="SG.Line" Color="#D5D9DE"/>
     <SolidColorBrush x:Key="SG.Surface" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SG.AccentHover" Color="#0B5F58"/>
     <SolidColorBrush x:Key="SG.Hover" Color="#F1F3F5"/>
     <SolidColorBrush x:Key="SG.NoticeBack" Color="#E3F4F1"/>
     <SolidColorBrush x:Key="SG.NoticeInk" Color="#0B4F49"/>
@@ -39,36 +39,37 @@
     <Style x:Key="SG.Label" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource SG.Muted}"/>
         <Setter Property="FontSize" Value="12.5"/>
-        <Setter Property="Margin" Value="0,0,0,4"/>
+        <Setter Property="Margin" Value="0,12,0,4"/>
     </Style>
 
     <!-- Text field: the border turns teal while you type in it -->
     <Style x:Key="SG.TextBox" TargetType="TextBox">
         <Setter Property="Foreground" Value="{StaticResource SG.Ink}"/>
-        <Setter Property="CaretBrush" Value="{StaticResource SG.Ink}"/>
-        <Setter Property="SelectionBrush" Value="{StaticResource SG.Accent}"/>
-        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="Background" Value="{StaticResource SG.Surface}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SG.Line}"/>
+        <Setter Property="Padding" Value="6,4"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border x:Name="frame" CornerRadius="6"
-                            Background="{StaticResource SG.Surface}"
-                            BorderBrush="{StaticResource SG.Line}"
+                    <Border CornerRadius="6"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="1.5">
                         <ScrollViewer x:Name="PART_ContentHost"/>
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
-                        </Trigger>
-                        <!-- A field that can't be used is greyed out -->
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="frame" Property="Background" Value="{StaticResource SG.Hover}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <!-- Typing in it: teal border -->
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
+            </Trigger>
+            <!-- Can't be used (a legend's number): grey -->
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="{StaticResource SG.Hover}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Ordinary button, such as Cancel -->
@@ -78,78 +79,66 @@
         <Setter Property="BorderBrush" Value="{StaticResource SG.Line}"/>
         <Setter Property="MinWidth" Value="84"/>
         <Setter Property="Padding" Value="14,6"/>
+        <!-- How a button is drawn: a rounded border with the label in it -->
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="frame" CornerRadius="6"
+                    <Border CornerRadius="6"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="1.5"
                             Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="frame" Property="Background" Value="{StaticResource SG.Hover}"/>
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <!-- Hover: light grey -->
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource SG.Hover}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- The one main button of a window, such as Apply -->
-    <Style x:Key="SG.PrimaryButton" TargetType="Button" BasedOn="{StaticResource SG.Button}">
+    <Style x:Key="SG.PrimaryButton" TargetType="Button"
+           BasedOn="{StaticResource SG.Button}">
         <Setter Property="Foreground" Value="{StaticResource SG.OnAccent}"/>
         <Setter Property="Background" Value="{StaticResource SG.Accent}"/>
         <Setter Property="BorderBrush" Value="{StaticResource SG.Accent}"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="frame" CornerRadius="6"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="1.5"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="frame" Property="Background" Value="{StaticResource SG.AccentHover}"/>
-                            <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource SG.AccentHover}"/>
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="frame" Property="BorderBrush" Value="{StaticResource SG.Ink}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <!-- Hover: darker teal -->
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource SG.AccentHover}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource SG.AccentHover}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
-    <!-- The small X in a window's title bar -->
+    <!-- The small × in a window's title bar -->
     <Style x:Key="SG.CloseButton" TargetType="Button">
         <Setter Property="Width" Value="24"/>
         <Setter Property="Height" Value="24"/>
         <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="frame" CornerRadius="6" Background="Transparent">
-                        <Path Data="M0,0 L8,8 M8,0 L0,8" Stroke="{StaticResource SG.Muted}"
-                              StrokeThickness="1.4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border CornerRadius="6" Background="{TemplateBinding Background}">
+                        <Path Data="M0,0 L8,8 M8,0 L0,8"
+                              Stroke="{StaticResource SG.Muted}" StrokeThickness="1.4"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="frame" Property="Background" Value="{StaticResource SG.Hover}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource SG.Hover}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
 </ResourceDictionary>

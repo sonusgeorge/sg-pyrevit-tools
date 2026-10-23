@@ -3,5 +3,5 @@
 
 import os.path as op
 
-# Full path of the shared look (colours, fonts, button and field styles).
+# Full path of the shared look (colours, fonts and styles).
 STYLES = op.join(op.dirname(__file__), "styles.xaml")

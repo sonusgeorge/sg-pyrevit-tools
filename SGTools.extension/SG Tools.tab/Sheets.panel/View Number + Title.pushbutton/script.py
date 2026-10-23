@@ -18,27 +18,23 @@ Good to know:
 - A legend has no number, so only its title can be changed.
 - Leave the title empty to show the view's own name.
 _____________________________________________________________________
-Version 1.0 (October 2026). Tested in Revit 2024 and 2027.
+Version 1.0 (October 2026). Tested in Revit 2027.
 Press F1 for the full guide."""
 
 __title__ = "View Number\n+ Title"
 __author__ = "Sonu George"
 __helpurl__ = "https://github.com/sonusgeorge/sg-pyrevit-tools#view-number--title"
 
-import re
-
 import clr
 
-# Visibility is part of WPF, Windows' library for building windows.
-# IronPython can only import from a .NET library after being told to
-# load it, which is what AddReference does.
+# Visibility (shown or collapsed) is part of WPF. IronPython can only
+# import from a .NET library after AddReference has loaded it.
 clr.AddReference("PresentationCore")
 from System.Windows import Visibility
 
 from pyrevit import revit, DB, forms
 from Autodesk.Revit.UI.Selection import ISelectionFilter, ObjectType
 from Autodesk.Revit.Exceptions import OperationCanceledException
-
 from sgtools import STYLES
 
 doc = revit.doc
@@ -47,13 +43,6 @@ uidoc = revit.uidoc
 # Revit's internal names for the two parameters this tool changes.
 DETAIL_NUMBER = DB.BuiltInParameter.VIEWPORT_DETAIL_NUMBER
 TITLE_ON_SHEET = DB.BuiltInParameter.VIEW_DESCRIPTION
-
-# Revit refuses two views with the same number on one sheet, even for a
-# moment, so a swap parks one view on this number in between.
-TEMP_NUMBER = "SG_TEMP_SWAP"
-
-TOOL_NAME = "View Number + Title"
-
 
 class ViewportFilter(ISelectionFilter):
     """Tells Revit which elements the user is allowed to click."""
@@ -64,93 +53,66 @@ class ViewportFilter(ISelectionFilter):
     def AllowReference(self, reference, point):
         return False
 
-
-def get_number(viewport):
-    """The view's Detail Number. Empty text for a view that has none,
-    such as a legend."""
-    return viewport.get_Parameter(DETAIL_NUMBER).AsString() or ""
-
+# Revit refuses two views with the same number on one sheet, even for a
+# moment, so a swap parks one view on this number in between.
+TEMP_NUMBER = "SG_TEMP_SWAP"
 
 def set_number(viewport, number):
-    # Set() returns False when Revit refuses the value. Raising an error
-    # here makes the transaction undo everything it has done so far.
+    """Set a view's Detail Number. If Revit refuses, raise an error, so the
+    transaction undoes everything done so far."""
     if not viewport.get_Parameter(DETAIL_NUMBER).Set(number):
         raise Exception("Revit refused the number '{}'.".format(number))
 
-
-def free_temp_number(numbers_in_use):
-    """A temporary number that no view on the sheet is using."""
-    number = TEMP_NUMBER
-    while number in numbers_in_use:
-        number += "_"
-    return number
-
-
-def get_title_on_sheet(view):
-    """What is typed in Title on Sheet. Empty text if nothing is."""
-    return view.get_Parameter(TITLE_ON_SHEET).AsString() or ""
-
-
-def get_shown_title(viewport):
-    """The title you see on the sheet: Title on Sheet, or the view name."""
-    view = doc.GetElement(viewport.ViewId)
-    return get_title_on_sheet(view) or view.Name
-
-
-def describe_view_type(view):
-    """Turn Revit's 'FloorPlan' into 'floor plan' for the box."""
-    name = str(view.ViewType)
-    special = {"ThreeD": "3D view", "EngineeringPlan": "structural plan"}
-    if name in special:
-        return special[name]
-    return re.sub("([a-z])([A-Z])", r"\1 \2", name).lower()
-
+def shown_title(viewport):
+    """The title you see on the sheet: Title on Sheet, or the view's name
+    when Title on Sheet is empty."""
+    title = viewport.get_Parameter(TITLE_ON_SHEET).AsString()
+    return title or doc.GetElement(viewport.ViewId).Name
 
 class ViewTitleWindow(forms.WPFWindow):
     """The box that asks for the new number and title.
 
+    'others' is the sheet's other numbered views: {number: viewport}.
     After it closes, 'result' is (number, title), or None if cancelled."""
 
-    def __init__(self, view_name, view_type, old_number, old_title, numbers_in_use):
+    def __init__(self, view_name, old_number, old_title, others):
         # Load the shared SG Tools look first, then this window's layout.
         self.merge_resource_dict(STYLES)
         forms.WPFWindow.__init__(self, "ViewTitleWindow.xaml")
-
-        self.old_number = old_number
-        self.numbers_in_use = numbers_in_use
         self.result = None
+        self.old_number = old_number
+        self.others = others
         # A view with no number (a legend) can only have its title changed.
         self.has_number = bool(old_number)
 
-        # Fill the box with what the picked view has now.
-        self.view_name_run.Text = view_name
-        self.view_type_run.Text = view_type
-        self.title_hint.Text = view_name
-        self.title_tb.Text = old_title
+        # Fill the box with what the clicked view has now. Filling the
+        # number field already runs number_changed, so everything it
+        # uses must be stored above this point.
+        self.view_name_tb.Text = view_name
         self.number_tb.Text = old_number
-
+        self.title_tb.Text = old_title
         if not self.has_number:
             self.number_tb.IsEnabled = False
             self.show_notice("This view has no detail number. "
                              "You can still change its title.")
 
     def window_loaded(self, sender, args):
-        # Put the cursor in the number field with the number selected,
-        # so typing replaces it. Without a number, start in the title.
+        # Start with the cursor in the number field and the number
+        # selected, so typing replaces it. A legend starts in the title.
         field = self.number_tb if self.has_number else self.title_tb
         field.Focus()
-        field.SelectAll()
+        field.SelectAll()    
 
     def number_changed(self, sender, args):
-        # Runs on every keystroke in the number field.
+        # Runs on every change to the text in the number field.
         if not self.has_number:
             return
         number = self.number_tb.Text.strip()
         if not number:
             self.show_notice("Type a number. A view can't be left without one.",
                              problem=True)
-        elif number != self.old_number and number in self.numbers_in_use:
-            other_title = self.numbers_in_use[number]
+        elif number != self.old_number and number in self.others:
+            other_title = shown_title(self.others[number])
             self.show_notice(
                 "{0} is used by {1}. The two views will swap, so {1} becomes {2}."
                 .format(number, other_title, self.old_number))
@@ -158,25 +120,30 @@ class ViewTitleWindow(forms.WPFWindow):
             self.notice.Visibility = Visibility.Collapsed
 
     def show_notice(self, text, problem=False):
-        kind = "Problem" if problem else "Notice"
-        self.notice.Background = self.FindResource("SG.{}Back".format(kind))
-        self.notice_tb.Foreground = self.FindResource("SG.{}Ink".format(kind))
+        """Show text under the number: teal for information, red for a problem."""
+        if problem:
+            back, ink = "SG.ProblemBack", "SG.ProblemInk"
+        else:
+            back, ink = "SG.NoticeBack", "SG.NoticeInk"
+        self.notice.Background = self.FindResource(back)
+        self.notice_tb.Foreground = self.FindResource(ink)
         self.notice_tb.Text = text
         self.notice.Visibility = Visibility.Visible
 
-    def apply(self, sender, args):
+    def apply_clicked(self, sender, args):
         number = self.number_tb.Text.strip()
+        # An empty number: the red notice already says why, so stay open.
         if self.has_number and not number:
             return
         self.result = (number, self.title_tb.Text.strip())
         self.Close()
 
-    def cancel(self, sender, args):
+    def cancel_clicked(self, sender, args):
         self.Close()
 
     def drag_window(self, sender, args):
+        # Lets you move the box by dragging its title bar.
         self.DragMove()
-
 
 # 1. Check that the open view is a sheet. If it isn't, say so and stop.
 if not isinstance(revit.active_view, DB.ViewSheet):
@@ -186,66 +153,64 @@ if not isinstance(revit.active_view, DB.ViewSheet):
                 "it first (right-click, Deactivate View).",
         exitscript=True)
 
-# 2. Show a banner at the top of Revit.
+
+# 2 to 7 run while a banner at the top of Revit says what to do.
 with forms.WarningBar(title="Pick a view to renumber. Esc to finish."):
     while True:
-        # 3. Wait for a click on a view. Esc ends the tool.
+        # 2. Wait for a click on a view on the sheet. Esc stops the tool.
         try:
             reference = uidoc.Selection.PickObject(
                 ObjectType.Element,
                 ViewportFilter(),
-                "Pick a view to renumber. Esc to finish.")
+                "Pick a view. Esc to finish.")
         except OperationCanceledException:
             break
-        picked = doc.GetElement(reference)
-        view = doc.GetElement(picked.ViewId)
+        viewport = doc.GetElement(reference)
 
-        # 4. Read the picked view's current number and title.
-        old_number = get_number(picked)
-        old_title = get_title_on_sheet(view)
+        # 3. Read the view's Detail Number and Title on Sheet.
+        number_param = viewport.get_Parameter(DETAIL_NUMBER)
+        title_param = viewport.get_Parameter(TITLE_ON_SHEET)
+        old_number = number_param.AsString() or ""
+        old_title = title_param.AsString() or ""
 
-        # 5. Note which number each of the other views on this sheet has.
-        #    Views without a number (legends) are left out.
-        sheet = doc.GetElement(picked.SheetId)
+        # 4. Note which number each of the other views on this sheet has, so
+        #    the box can warn about a swap. Views without a number (legends)
+        #    are left out.
+        sheet = doc.GetElement(viewport.SheetId)
         others = {}
-        for viewport_id in sheet.GetAllViewports():
-            viewport = doc.GetElement(viewport_id)
-            number = get_number(viewport)
-            if viewport.Id != picked.Id and number:
-                others[number] = viewport
+        for other_id in sheet.GetAllViewports():
+            other = doc.GetElement(other_id)
+            number = other.get_Parameter(DETAIL_NUMBER).AsString() or ""
+            if other.Id != viewport.Id and number:
+                others[number] = other
 
-        # 6. Show the box and wait for Apply or Cancel.
-        window = ViewTitleWindow(
-            view.Name,
-            describe_view_type(view),
-            old_number,
-            old_title,
-            {number: get_shown_title(vp) for number, vp in others.items()})
+        # 5. Show the box with the current values and wait for Apply or
+        #    Cancel. Cancel goes back to step 2.
+        view = doc.GetElement(viewport.ViewId)
+        window = ViewTitleWindow(view.Name, old_number, old_title, others)
         window.show_dialog()
-
-        # Cancelled or nothing changed: change nothing, pick again.
         if window.result is None:
             continue
         new_number, new_title = window.result
+
+        # 6. If nothing changed, go back to step 2.
         if new_number == old_number and new_title == old_title:
             continue
 
-        # 7. Make the changes as one undo step. If Revit refuses any of
-        #    them, the transaction undoes them all and we say so.
+        # 7. Make the changes as one undo step. If Revit refuses any of them,
+        #    the transaction undoes them all and we say so.
         try:
-            with revit.Transaction(TOOL_NAME, log_errors=False):
+            with revit.Transaction("View Number + Title", log_errors=False):
                 if new_number != old_number:
                     other = others.get(new_number)
                     if other is None:
-                        set_number(picked, new_number)
+                        set_number(viewport, new_number)
                     else:
-                        set_number(other, free_temp_number(others))
-                        set_number(picked, new_number)
+                        set_number(other, TEMP_NUMBER)
+                        set_number(viewport, new_number)
                         set_number(other, old_number)
                 if new_title != old_title:
-                    view.get_Parameter(TITLE_ON_SHEET).Set(new_title)
+                    title_param.Set(new_title)
         except Exception as error:
-            forms.alert("Revit refused the change, so nothing was changed.",
-                        sub_msg=str(error))
-
-        # 8. Back to step 3.
+            forms.alert("Revit refused the change, so nothing was changed.\n\n"
+                        + str(error))

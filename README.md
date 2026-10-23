@@ -44,6 +44,10 @@ Each change is one undo step, so Ctrl+Z takes back one view at a time.
 - When Revit rejects a value it doesn't raise an error. It returns `False` and may show its own pop-up, so the code has to check the value first.
 - A selection filter decides what the user is allowed to click, which also protects the rest of the code from elements it can't handle.
 - A window is described in XAML, a layout file with no logic, and the Python class behind it supplies the behaviour. The shared colours and styles live in one file so every tool looks the same.
+- The Python class behind the window inherits from pyRevit's `WPFWindow`, which already knows how to load and show a XAML file. Names given with `x:Name` become attributes in Python, and events such as `Click` and `TextChanged` call Python methods by name, so a typo on either side stops the window from opening.
+- Setting a colour isn't enough to change how a button looks. Windows' own button template paints its own light blue on hover and ignores the colour you set, so the shared styles replace the template with a rounded border that takes its colours from the button.
+- Order matters when a window opens. The shared styles have to be loaded before the layout that uses them, and filling the number field already fires its `TextChanged` event, so everything that event needs has to be stored first.
+- Rebuilding the tool on a separate git branch kept the working version on `main` while the new one grew, one tested commit at a time.
 
 ## Install
 
@@ -54,4 +58,4 @@ Each change is one undo step, so Ctrl+Z takes back one view at a time.
 
 ## How these tools are made
 
-I plan each tool and decide how it should behave, the code is written with an AI assistant (Claude), and I don't move on until I can explain what every part does. Each tool goes through the same steps: plan, research, outline, code, explain, polish, stress-test, ship. The steps are adapted from Erik Frits's PROCESS framework for pyRevit tools.
+I plan each tool and decide how it should behave, and an AI assistant (Claude) helps with the code: it explains each piece, and I type it in myself, one small piece at a time, testing in Revit as I go. I don't move on until I can explain what every part does. The first version of View Number + Title was written by the assistant; I then rebuilt it from scratch this way, because I learned far more by building it myself. Each tool goes through the same steps: plan, research, outline, code, explain, polish, stress-test, ship. The steps are adapted from Erik Frits's PROCESS framework for pyRevit tools.
