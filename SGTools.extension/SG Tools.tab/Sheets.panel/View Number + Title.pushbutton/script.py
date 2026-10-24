@@ -36,6 +36,7 @@ from pyrevit import revit, DB, forms
 from Autodesk.Revit.UI.Selection import ISelectionFilter, ObjectType
 from Autodesk.Revit.Exceptions import OperationCanceledException
 from sgtools import STYLES
+from sgtools.banner import PickBanner
 
 doc = revit.doc
 uidoc = revit.uidoc
@@ -155,7 +156,10 @@ if not isinstance(revit.active_view, DB.ViewSheet):
 
 
 # 2 to 7 run while a banner at the top of Revit says what to do.
-with forms.WarningBar(title="Pick a view to renumber. Esc to finish."):
+# "finally" closes it however the tool ends.
+banner = PickBanner("Pick a view to renumber", __revit__)
+banner.show()
+try:
     while True:
         # 2. Wait for a click on a view on the sheet. Esc stops the tool.
         try:
@@ -214,3 +218,5 @@ with forms.WarningBar(title="Pick a view to renumber. Esc to finish."):
         except Exception as error:
             forms.alert("Revit refused the change, so nothing was changed.\n\n"
                         + str(error))
+finally:
+    banner.Close()
