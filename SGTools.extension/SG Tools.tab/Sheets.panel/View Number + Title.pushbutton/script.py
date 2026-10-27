@@ -37,12 +37,12 @@ from Autodesk.Revit.UI.Selection import ISelectionFilter, ObjectType
 from Autodesk.Revit.Exceptions import OperationCanceledException
 from sgtools import STYLES
 from sgtools.banner import PickBanner
+from sgtools.viewports import TEMP_PREFIX, get_number, set_number
 
 doc = revit.doc
 uidoc = revit.uidoc
 
-# Revit's internal names for the two parameters this tool changes.
-DETAIL_NUMBER = DB.BuiltInParameter.VIEWPORT_DETAIL_NUMBER
+# Revit’s internal name for the Title on Sheet parameter.
 TITLE_ON_SHEET = DB.BuiltInParameter.VIEW_DESCRIPTION
 
 class ViewportFilter(ISelectionFilter):
@@ -53,16 +53,6 @@ class ViewportFilter(ISelectionFilter):
 
     def AllowReference(self, reference, point):
         return False
-
-# Revit refuses two views with the same number on one sheet, even for a
-# moment, so a swap parks one view on this number in between.
-TEMP_NUMBER = "SG_TEMP_SWAP"
-
-def set_number(viewport, number):
-    """Set a view's Detail Number. If Revit refuses, raise an error, so the
-    transaction undoes everything done so far."""
-    if not viewport.get_Parameter(DETAIL_NUMBER).Set(number):
-        raise Exception("Revit refused the number '{}'.".format(number))
 
 def shown_title(viewport):
     """The title you see on the sheet: Title on Sheet, or the view's name
@@ -172,9 +162,8 @@ try:
         viewport = doc.GetElement(reference)
 
         # 3. Read the view's Detail Number and Title on Sheet.
-        number_param = viewport.get_Parameter(DETAIL_NUMBER)
         title_param = viewport.get_Parameter(TITLE_ON_SHEET)
-        old_number = number_param.AsString() or ""
+        old_number = get_number(viewport)
         old_title = title_param.AsString() or ""
 
         # 4. Note which number each of the other views on this sheet has, so
@@ -184,7 +173,7 @@ try:
         others = {}
         for other_id in sheet.GetAllViewports():
             other = doc.GetElement(other_id)
-            number = other.get_Parameter(DETAIL_NUMBER).AsString() or ""
+            number = get_number(other)
             if other.Id != viewport.Id and number:
                 others[number] = other
 
@@ -210,7 +199,7 @@ try:
                     if other is None:
                         set_number(viewport, new_number)
                     else:
-                        set_number(other, TEMP_NUMBER)
+                        set_number(other, TEMP_PREFIX + "SWAP")
                         set_number(viewport, new_number)
                         set_number(other, old_number)
                 if new_title != old_title:
