@@ -122,7 +122,19 @@ else:
     for row in rows:
         ordered += sorted(row, key=lambda v: centre(v, "x"))
 
-# 6. Renumber as one undo step. First park every view on its own
+# 6. If every view already has the number it would get, say so and stop.
+#    Nothing is changed, so no empty step is added to Undo.
+already_in_order = True
+for count, viewport in enumerate(ordered, 1):
+    if get_number(viewport) != str(count):
+        already_in_order = False
+        break
+if already_in_order:
+    forms.alert("The views on this sheet are already in order ({}).\n"
+                "Nothing was changed.".format(choice.lower()),
+                exitscript=True)
+
+# 7. Renumber as one undo step. First park every view on its own
 #    temporary number, so two views never share one, even for a moment.
 #    Then give each view its new number. If Revit refuses any of them,
 #    the transaction undoes everything and we say so.
@@ -135,3 +147,11 @@ try:
 except Exception as error:
     forms.alert("Revit refused the change, so nothing was changed.\n\n"
                 + str(error))
+else:
+    # Runs only if nothing went wrong above.
+    if len(ordered) == 1:
+        views_text = "1 view"
+    else:
+        views_text = "{} views".format(len(ordered))
+    forms.show_balloon("SG Tools",
+                       "Numbered {}, {}.".format(views_text, choice.lower()))
