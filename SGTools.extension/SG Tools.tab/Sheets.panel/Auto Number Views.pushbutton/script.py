@@ -1,8 +1,29 @@
 # -*- coding: utf-8 -*-
-"""Number the views on a sheet by where they sit."""
-
+__doc__ = """Number the views on a sheet by where they sit.
+____________________________________________________________________
+What it does:
+Gives the views on the open sheet the Detail Numbers 1, 2, 3...
+in reading order. You choose the order:
+- Columns first: each column top to bottom, columns left to right.
+- Rows first: each row left to right, rows top to bottom.
+____________________________________________________________________
+How to use:
+1. Open a sheet and click this button.
+2. Click Columns first or Rows first.
+3. Check the new numbers on the sheet.
+____________________________________________________________________
+Good to know:
+- Your last choice is highlighted next time. Enter picks it.
+- Legends and schedules are skipped.
+- Numbering always starts at 1.
+- All the changes are one undo step (Ctrl+Z).
+- If the views are already in order, nothing is changed.
+____________________________________________________________________
+Version 1.0 (October 2026). Tested in Revit 2027.
+Press F1 for the full guide."""
 __title__ = "Auto Number\nViews"
 __author__ = "Sonu George"
+__helpurl__ = "https://github.com/sonusgeorge/sg-pyrevit-tools#auto-number-views"
 
 from pyrevit import revit, DB, forms, script
 from sgtools.viewports import TEMP_PREFIX, get_number, set_number
