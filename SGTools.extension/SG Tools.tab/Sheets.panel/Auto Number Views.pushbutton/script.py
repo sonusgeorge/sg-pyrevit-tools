@@ -6,6 +6,7 @@ __author__ = "Sonu George"
 
 from pyrevit import revit, DB, forms, script
 from sgtools.viewports import TEMP_PREFIX, get_number, set_number
+from sgtools import STYLES
 
 doc = revit.doc
 
@@ -40,6 +41,31 @@ def group(viewports, axis):
         groups.append([viewport])
     return groups
 
+class OrderWindow(forms.WPFWindow):
+    """Asks for the reading order. After it closes, 'choice' is
+    "Columns first", "Rows first", or None if it was closed."""
+
+    def __init__(self):
+        # Load the shared SG Tools look first, then this window's layout.
+        self.merge_resource_dict(STYLES)
+        forms.WPFWindow.__init__(self, "OrderWindow.xaml")
+        self.choice = None
+
+    def columns_clicked(self, sender, args):
+        self.choice = "Columns first"
+        self.Close()
+
+    def rows_clicked(self, sender, args):
+        self.choice = "Rows first"
+        self.Close()
+
+    def cancel_clicked(self, sender, args):
+        self.Close()
+
+    def drag_window(self, sender, args):
+        # Lets you move the window by dragging its title bar.
+        self.DragMove()
+
 # 1. Check that the open view is a sheet. If it isn't, say so and stop.
 sheet = revit.active_view
 if not isinstance(sheet, DB.ViewSheet):
@@ -62,9 +88,9 @@ if not viewports:
                 exitscript=True)
 
 # 3. Ask for the reading order. Esc or closing the window stops the tool.
-choice = forms.CommandSwitchWindow.show(
-    ["Columns first", "Rows first"],
-    message="Number the views on this sheet:")
+window = OrderWindow()
+window.show_dialog()
+choice = window.choice
 if not choice:
     script.exit()
 

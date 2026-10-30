@@ -1,0 +1,85 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Auto Number Views"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterOwner">
+
+    <!-- The white card, the same as tool 1's. The margin leaves room for its shadow. -->
+    <Border Style="{StaticResource SG.WindowFrame}" Margin="24"
+            TextElement.FontFamily="{StaticResource SG.Font}"
+            TextElement.FontSize="13"
+            TextElement.Foreground="{StaticResource SG.Ink}">
+        <DockPanel>
+
+            <!-- Title bar: drag it to move the window. Esc presses the ×. -->
+            <Border DockPanel.Dock="Top" Background="Transparent" Padding="14,8,8,8"
+                    BorderBrush="{StaticResource SG.Line}" BorderThickness="0,0,0,1"
+                    MouseLeftButtonDown="drag_window">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource SG.CloseButton}"
+                            Click="cancel_clicked" IsCancel="True" ToolTip="Close"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="SG Tools" Margin="0,0,8,0" FontWeight="SemiBold"
+                                   Foreground="{StaticResource SG.Accent}"/>
+                        <TextBlock Text="Auto number views" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <StackPanel Margin="16,14,16,18">
+                <TextBlock Text="Number the views on this sheet:"/>
+
+                <!-- The two choices, side by side -->
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+
+                    <!-- A style used only here: one small "view" in the
+                         picture on each button -->
+                    <StackPanel.Resources>
+                        <Style x:Key="Cell" TargetType="TextBlock">
+                            <Setter Property="Width" Value="26"/>
+                            <Setter Property="Margin" Value="3"/>
+                            <Setter Property="Padding" Value="0,3"/>
+                            <Setter Property="TextAlignment" Value="Center"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Background" Value="{StaticResource SG.NoticeBack}"/>
+                            <Setter Property="Foreground" Value="{StaticResource SG.NoticeInk}"/>
+                        </Style>
+                    </StackPanel.Resources>
+
+                    <!-- Columns first: 1 and 2 down the left, 3 and 4 down the right -->
+                    <Button Style="{StaticResource SG.Button}" Padding="18,12" Margin="0,0,10,0"
+                            Click="columns_clicked">
+                        <StackPanel>
+                            <UniformGrid Rows="2" Columns="2" HorizontalAlignment="Center">
+                                <TextBlock Text="1" Style="{StaticResource Cell}"/>
+                                <TextBlock Text="3" Style="{StaticResource Cell}"/>
+                                <TextBlock Text="2" Style="{StaticResource Cell}"/>
+                                <TextBlock Text="4" Style="{StaticResource Cell}"/>
+                            </UniformGrid>
+                            <TextBlock Text="Columns first" Margin="0,8,0,0"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Rows first: 1 and 2 along the top, 3 and 4 along the bottom -->
+                    <Button Style="{StaticResource SG.Button}" Padding="18,12"
+                            Click="rows_clicked">
+                        <StackPanel>
+                            <UniformGrid Rows="2" Columns="2" HorizontalAlignment="Center">
+                                <TextBlock Text="1" Style="{StaticResource Cell}"/>
+                                <TextBlock Text="2" Style="{StaticResource Cell}"/>
+                                <TextBlock Text="3" Style="{StaticResource Cell}"/>
+                                <TextBlock Text="4" Style="{StaticResource Cell}"/>
+                            </UniformGrid>
+                            <TextBlock Text="Rows first" Margin="0,8,0,0"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                </StackPanel>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</Window>
