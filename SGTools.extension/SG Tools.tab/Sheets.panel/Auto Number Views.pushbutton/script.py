@@ -42,14 +42,23 @@ def group(viewports, axis):
     return groups
 
 class OrderWindow(forms.WPFWindow):
-    """Asks for the reading order. After it closes, 'choice' is
-    "Columns first", "Rows first", or None if it was closed."""
+    """Asks for the reading order, with last time's choice highlighted.
+    After it closes, 'choice' is "Columns first", "Rows first", or None
+    if it was closed."""
 
-    def __init__(self):
+    def __init__(self, last_choice):
         # Load the shared SG Tools look first, then this window's layout.
         self.merge_resource_dict(STYLES)
         forms.WPFWindow.__init__(self, "OrderWindow.xaml")
         self.choice = None
+
+        # Make last time's choice the teal button that Enter presses.
+        if last_choice == "Rows first":
+            remembered = self.rows_btn
+        else:
+            remembered = self.columns_btn
+        remembered.Style = self.FindResource("SG.PrimaryButton")
+        remembered.IsDefault = True
 
     def columns_clicked(self, sender, args):
         self.choice = "Columns first"
@@ -87,12 +96,17 @@ if not viewports:
     forms.alert("This sheet has no numbered views to renumber.",
                 exitscript=True)
 
-# 3. Ask for the reading order. Esc or closing the window stops the tool.
-window = OrderWindow()
+# 3. Ask for the reading order, with last time's choice highlighted.
+#    Esc or closing the window stops the tool. A new choice is
+#    remembered for next time.
+config = script.get_config()
+window = OrderWindow(config.get_option("last_order", "Columns first"))
 window.show_dialog()
 choice = window.choice
 if not choice:
     script.exit()
+config.set_option("last_order", choice)
+script.save_config()
 
 # 4 and 5. Group the views into columns or rows, then put them in
 #    reading order.

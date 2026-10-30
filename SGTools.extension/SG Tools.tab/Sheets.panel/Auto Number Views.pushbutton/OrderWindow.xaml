@@ -49,7 +49,7 @@
                     </StackPanel.Resources>
 
                     <!-- Columns first: 1 and 2 down the left, 3 and 4 down the right -->
-                    <Button Style="{StaticResource SG.Button}" Padding="18,12" Margin="0,0,10,0"
+                    <Button x:Name="columns_btn" Style="{StaticResource SG.Button}" Padding="18,12" Margin="0,0,10,0"
                             Click="columns_clicked">
                         <StackPanel>
                             <UniformGrid Rows="2" Columns="2" HorizontalAlignment="Center">
@@ -64,7 +64,7 @@
                     </Button>
 
                     <!-- Rows first: 1 and 2 along the top, 3 and 4 along the bottom -->
-                    <Button Style="{StaticResource SG.Button}" Padding="18,12"
+                    <Button x:Name="rows_btn" Style="{StaticResource SG.Button}" Padding="18,12"
                             Click="rows_clicked">
                         <StackPanel>
                             <UniformGrid Rows="2" Columns="2" HorizontalAlignment="Center">
