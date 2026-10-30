@@ -1,23 +1,23 @@
 # -*- coding: utf-8 -*-
-"""Renumber and retitle the views on a sheet.
-_____________________________________________________________________
+__doc__ = """Renumber and retitle the views on a sheet.
+____________________________________________________________________
 What it does:
 Changes a view's Detail Number and its Title on Sheet.
 If the number already belongs to another view on the sheet,
 the two views swap numbers, so you never juggle temporary numbers.
-_____________________________________________________________________
+____________________________________________________________________
 How to use:
 1. Open a sheet and click this button.
 2. Click a view on the sheet.
 3. Type the new number, the new title, or both. Press Enter.
 4. Click the next view, or press Esc to finish.
-_____________________________________________________________________
+____________________________________________________________________
 Good to know:
 - A notice warns you before two views swap.
 - Each change is one undo step (Ctrl+Z).
 - A legend has no number, so only its title can be changed.
 - Leave the title empty to show the view's own name.
-_____________________________________________________________________
+____________________________________________________________________
 Version 1.0 (October 2026). Tested in Revit 2027.
 Press F1 for the full guide."""
 
