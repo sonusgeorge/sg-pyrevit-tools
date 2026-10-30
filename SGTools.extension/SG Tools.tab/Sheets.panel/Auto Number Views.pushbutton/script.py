@@ -5,7 +5,7 @@ __title__ = "Auto Number\nViews"
 __author__ = "Sonu George"
 
 from pyrevit import revit, DB, forms, script
-from sgtools.viewports import get_number
+from sgtools.viewports import TEMP_PREFIX, get_number, set_number
 
 doc = revit.doc
 
@@ -82,7 +82,16 @@ else:
     for row in rows:
         ordered += sorted(row, key=lambda v: centre(v, "x"))
 
-# For now: show the new order, to check steps 3 to 5.
-for new_number, viewport in enumerate(ordered, 1):
-    view = doc.GetElement(viewport.ViewId)
-    print("{}  {}  (now {})".format(new_number, view.Name, get_number(viewport)))
+# 6. Renumber as one undo step. First park every view on its own
+#    temporary number, so two views never share one, even for a moment.
+#    Then give each view its new number. If Revit refuses any of them,
+#    the transaction undoes everything and we say so.
+try:
+    with revit.Transaction("Auto Number Views", log_errors=False):
+        for count, viewport in enumerate(ordered, 1):
+            set_number(viewport, TEMP_PREFIX + str(count))
+        for count, viewport in enumerate(ordered, 1):
+            set_number(viewport, str(count))
+except Exception as error:
+    forms.alert("Revit refused the change, so nothing was changed.\n\n"
+                + str(error))
