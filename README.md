@@ -57,8 +57,6 @@ Each change is one undo step, so Ctrl+Z takes back one view at a time.
 
 **What the tool does.** One click numbers every view on the open sheet 1, 2, 3… by where it sits. You choose the reading order: columns first or rows first.
 
-![Numbering the views on a sheet, columns first](docs/auto-number-views/demo.gif)
-
 <img src="docs/auto-number-views/box.png" alt="The Auto Number Views box, with a Columns first and a Rows first button, each showing the order as a small grid of numbers" width="400">
 
 **How to use it**
