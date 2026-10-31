@@ -49,6 +49,47 @@ Each change is one undo step, so Ctrl+Z takes back one view at a time.
 - Order matters when a window opens. The shared styles have to be loaded before the layout that uses them, and filling the number field already fires its `TextChanged` event, so everything that event needs has to be stored first.
 - Rebuilding the tool on a separate git branch kept the working version on `main` while the new one grew, one tested commit at a time.
 
+### Auto Number Views
+
+**Ribbon:** SG Tools tab, Sheets panel
+
+**The problem.** Once views have been placed and moved around a sheet, their Detail Numbers rarely follow the layout. Putting them back in reading order by hand means renumbering every view, one at a time, with temporary numbers in between.
+
+**What the tool does.** One click numbers every view on the open sheet 1, 2, 3… by where it sits. You choose the reading order: columns first or rows first.
+
+![Numbering the views on a sheet, columns first](docs/auto-number-views/demo.gif)
+
+<img src="docs/auto-number-views/box.png" alt="The Auto Number Views box, with a Columns first and a Rows first button, each showing the order as a small grid of numbers" width="400">
+
+**How to use it**
+
+1. Open a sheet and click **Auto Number Views**.
+2. Click **Columns first** (each column top to bottom, columns left to right) or **Rows first** (each row left to right, rows top to bottom).
+3. A message in the corner of Revit says how many views were numbered.
+
+All the changes are one undo step.
+
+**Good to know**
+
+- Legends and schedules are skipped. They have no Detail Number.
+- Numbering always starts at 1.
+- The box remembers your last choice and highlights it, so Enter repeats it.
+- If the views are already in order, nothing is changed and nothing is added to the Undo list.
+- A view joins a column when its centre falls within the width of the first view in that column (for rows, within its height). On an uneven layout the grouping can differ from what you'd expect, so check the result.
+
+**Tested in:** Revit 2024 and Revit 2027, in full. Written to be compatible with Revit 2025 and 2026, but not yet run in them.
+
+**What building it taught**
+
+- A viewport reports its box on the sheet through `GetBoxCenter()` and `GetBoxOutline()`. The values are sheet coordinates in feet, with y pointing up, so "top to bottom" means sorting from the highest y to the lowest. The box doesn't include the view's title.
+- `GetAllViewports()` doesn't return schedules, because a schedule on a sheet is a different element. Legends do come back, but with an empty Detail Number, so keeping only views that have a number skips both.
+- Renumbering every view at once takes two passes: first every view gets a temporary number, then each gets its new one. In one pass, two views would share a number for a moment and Revit would refuse.
+- Code that two tools need goes in the extension's `lib` folder. Reading a Detail Number and setting it safely moved out of View Number + Title into `sgtools/viewports.py`, and both tools now import it.
+- pyRevit can remember a setting between runs with `script.get_config()`, `set_option()` and `script.save_config()`.
+- Checking before changing anything means a run that has nothing to do doesn't leave an empty step in the Undo list.
+- In `try` / `except` / `else`, the `else` part runs only if nothing went wrong, which makes it the place for the success message.
+- Updating to pyRevit 7 changed how buttons are read. Its new loader ignores a plain docstring, so the tooltip is now written as `__doc__ = """..."""`. With that change, View Number + Title shows its tooltip text and video together.
+
 ## Install
 
 1. Install [pyRevit](https://github.com/pyrevitlabs/pyRevit).
@@ -58,4 +99,4 @@ Each change is one undo step, so Ctrl+Z takes back one view at a time.
 
 ## How these tools are made
 
-I plan each tool and decide how it should behave, and an AI assistant (Claude) helps with the code: it explains each piece, and I type it in myself, one small piece at a time, testing in Revit as I go. I don't move on until I can explain what every part does. The first version of View Number + Title was written by the assistant; I then rebuilt it from scratch this way, because I learned far more by building it myself. Each tool goes through the same steps: plan, research, outline, code, explain, polish, stress-test, ship. The steps are adapted from Erik Frits's PROCESS framework for pyRevit tools.
+I plan each tool and decide how it should behave, and an AI assistant (Claude) helps with the code: it explains each piece, and I type it in myself, one small piece at a time, testing in Revit as I go. I don't move on until I can explain what every part does. The first version of View Number + Title was written by the assistant; I then rebuilt it from scratch this way, because I learned far more by building it myself. Auto Number Views was built this way from the start. Each tool goes through the same steps: plan, research, outline, code, explain, polish, stress-test, ship. The steps are adapted from Erik Frits's PROCESS framework for pyRevit tools.
