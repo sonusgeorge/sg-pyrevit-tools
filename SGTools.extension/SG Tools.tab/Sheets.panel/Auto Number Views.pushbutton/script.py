@@ -19,7 +19,7 @@ Good to know:
 - All the changes are one undo step (Ctrl+Z).
 - If the views are already in order, nothing is changed.
 ____________________________________________________________________
-Version 1.0 (October 2026). Tested in Revit 2027.
+Version 1.0 (October 2026). Tested in Revit 2024 and 2027.
 Press F1 for the full guide."""
 __title__ = "Auto Number\nViews"
 __author__ = "Sonu George"
