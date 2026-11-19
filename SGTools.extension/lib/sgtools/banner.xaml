@@ -22,7 +22,7 @@
         </Border.Effect>
         <StackPanel Orientation="Horizontal">
             <TextBlock x:Name="message_tb" FontWeight="SemiBold"/>
-            <TextBlock Text="Esc to finish" Margin="14,0,0,0" Opacity="0.75"/>
+            <TextBlock x:Name="hint_tb" Margin="14,0,0,0" Opacity="0.75"/>
         </StackPanel>
     </Border>
 </Window>
