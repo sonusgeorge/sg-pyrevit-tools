@@ -19,7 +19,7 @@ Good to know:
 - All the changes are one undo step (Ctrl+Z).
 - If the views are already in order, nothing is changed.
 ____________________________________________________________________
-Version 1.0 (October 2026). Tested in Revit 2024 and 2027.
+Version 1.1 (November 2026). Tested in Revit 2024 and 2027.
 Press F1 for the full guide."""
 __title__ = "Auto Number\nViews"
 __author__ = "Sonu George"
@@ -28,6 +28,7 @@ __helpurl__ = "https://github.com/sonusgeorge/sg-pyrevit-tools#auto-number-views
 from pyrevit import revit, DB, forms, script
 from sgtools.viewports import TEMP_PREFIX, get_number, set_number
 from sgtools import STYLES
+from sgtools.banner import PickBanner
 
 doc = revit.doc
 
@@ -169,10 +170,12 @@ except Exception as error:
     forms.alert("Revit refused the change, so nothing was changed.\n\n"
                 + str(error))
 else:
-    # Runs only if nothing went wrong above.
+    # Runs only if nothing went wrong above: say what was done, in a
+    # teal banner that closes by itself after 3 seconds.
     if len(ordered) == 1:
         views_text = "1 view"
     else:
         views_text = "{} views".format(len(ordered))
-    forms.show_balloon("SG Tools",
-                       "Numbered {}, {}.".format(views_text, choice.lower()))
+    done = PickBanner("Numbered {}, {}.".format(views_text, choice.lower()),
+                      __revit__, hint="")
+    done.show_for(3)

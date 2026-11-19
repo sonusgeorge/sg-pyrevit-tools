@@ -63,7 +63,7 @@ Each change is one undo step, so Ctrl+Z takes back one view at a time.
 
 1. Open a sheet and click **Auto Number Views**.
 2. Click **Columns first** (each column top to bottom, columns left to right) or **Rows first** (each row left to right, rows top to bottom).
-3. A message in the corner of Revit says how many views were numbered.
+3. A teal banner at the top of the drawing area says how many views were numbered, then closes by itself.
 
 All the changes are one undo step.
 
@@ -88,6 +88,44 @@ All the changes are one undo step.
 - In `try` / `except` / `else`, the `else` part runs only if nothing went wrong, which makes it the place for the success message.
 - Updating to pyRevit 7 changed how buttons are read. Its new loader ignores a plain docstring, so the tooltip is now written as `__doc__ = """..."""`. With that change, View Number + Title shows its tooltip text and video together.
 
+### Move to View
+
+**Ribbon:** SG Tools tab, Sheets panel
+
+**The problem.** While annotating a sheet, it's easy to draw a text note or a detail line on the sheet itself instead of inside the view. It looks right until the view is moved: then the annotation stays behind. Fixing it by hand means cutting it, activating the view, pasting it aligned and checking the position, and a line drawn at paper size has to be redrawn at the view's scale.
+
+**What the tool does.** It moves text notes and detail lines from the sheet into the view you click, in the same place on the paper and at the same printed size. From then on they move with the view.
+
+**How to use it**
+
+1. Open the sheet and select the annotations. Or click **Move to View** first, select them, and click **Finish**.
+2. Click the view to move them into.
+3. A teal banner at the top of the drawing area says how many were moved, then closes by itself.
+
+All the changes are one undo step.
+
+**Good to know**
+
+- Only text notes and detail lines (including arcs, circles and splines) drawn on the sheet itself can be picked. Dimensions, tags and revision clouds aren't moved.
+- It works with plan, section, elevation, detail and drafting views, also when the viewport is rotated on the sheet. Legends, 3D views and views with a split crop region are refused with a message.
+- You always click the target view yourself. Viewports can overlap, so the tool doesn't guess.
+- If an annotation lies outside the view's box on the sheet, the tool asks before moving it, because inside the view the crop region may hide it.
+- Text notes keep their type, formatting and leaders, and lines keep their line style. A 10 mm line on the sheet becomes a 1000 mm line in a 1:100 view, so it still prints 10 mm long.
+
+**Tested in:** Revit 2024 and Revit 2027, in full. Written to be compatible with Revit 2025 and 2026, but not yet run in them.
+
+**What building it taught**
+
+- Every annotation knows which view it belongs to through `OwnerViewId`. An annotation drawn on the sheet by mistake has the sheet as its owner, and that one check decides what the tool may pick.
+- Revit converts between a view and the sheet in two steps: `GetModelToProjectionTransforms()` goes from the model to "paper inside the view" and holds the scale, and the viewport's `GetProjectionToSheetTransform()` places that paper on the sheet, including any rotation. Joining them with `Multiply` and turning the result round with `Inverse` gives one sheet-to-model conversion.
+- Drafting views and legends have neither conversion, so for drafting views the tool builds it by hand: the scale, plus the fact that the middle of the viewport's box on the sheet shows the middle of the view's drawing (`view.Outline`).
+- Copying can move and turn things but not scale them. Text notes can still be copied, because text keeps its printed size, but their leaders then come out 100 times too short and are set again point by point. Detail lines are drawn again at the new size.
+- `CopyElements` accepts a sheet as the view to copy from, even though the documentation doesn't list it. Trying it was the only way to find out.
+- A plan of an upper level converts sheet points to height 0. Revit lifts a new detail line onto the level by itself, but a moved note has to be put on the view's plane by the code.
+- In a viewport that is rotated on the sheet, a copied note comes in turned as well, so the tool turns it back with `AngleOnPlaneTo` and `RotateElement`.
+- During research, real changes can be tried inside a transaction that is rolled back afterwards, so the model is left exactly as it was.
+- The shared teal banner gained `show_for(seconds)`, which closes it with a WPF `DispatcherTimer`. Auto Number Views now uses it too, in place of Revit's notification balloon, so the pyRevit and C# tools end the same way.
+
 ## Install
 
 1. Install [pyRevit](https://github.com/pyrevitlabs/pyRevit).
@@ -97,4 +135,4 @@ All the changes are one undo step.
 
 ## How these tools are made
 
-I plan each tool and decide how it should behave, and an AI assistant (Claude) helps with the code: it explains each piece, and I type it in myself, one small piece at a time, testing in Revit as I go. I don't move on until I can explain what every part does. The first version of View Number + Title was written by the assistant; I then rebuilt it from scratch this way, because I learned far more by building it myself. Auto Number Views was built this way from the start. Each tool goes through the same steps: plan, research, outline, code, explain, polish, stress-test, ship. The steps are adapted from Erik Frits's PROCESS framework for pyRevit tools.
+I plan each tool and decide how it should behave, and an AI assistant (Claude) helps with the code: it explains each piece, and I type it in myself, one small piece at a time, testing in Revit as I go. I don't move on until I can explain what every part does. The first version of View Number + Title was written by the assistant; I then rebuilt it from scratch this way, because I learned far more by building it myself. Auto Number Views was built this way from the start. From Move to View on, the assistant writes the code files itself, one file at a time, and explains each piece in plain language before the next; I ask about anything unclear and run every test in Revit. Each tool goes through the same steps: plan, research, outline, code, explain, polish, stress-test, ship. The steps are adapted from Erik Frits's PROCESS framework for pyRevit tools.
